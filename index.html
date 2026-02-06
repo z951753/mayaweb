@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maya动画资料整合平台</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 自定义配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#8B5CF6',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+            .btn-primary {
+                @apply bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-300;
+            }
+            .btn-secondary {
+                @apply bg-secondary text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-300;
+            }
+            .btn-outline {
+                @apply border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors duration-300;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 导航栏 -->
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-film text-primary text-2xl"></i>
+                <h1 class="text-xl font-bold text-dark">Maya动画资料整合</h1>
+            </div>
+            <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="#home" class="text-gray-700 hover:text-primary transition-colors">首页</a></li>
+                    <li><a href="#resources" class="text-gray-700 hover:text-primary transition-colors">资料库</a></li>
+                    <li><a href="#categories" class="text-gray-700 hover:text-primary transition-colors">分类</a></li>
+                    <li><a href="#add" class="text-gray-700 hover:text-primary transition-colors">添加资料</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 首页/搜索区 -->
+        <section id="home" class="mb-12">
+            <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-8 text-white text-center">
+                <h2 class="text-3xl font-bold mb-4">Maya动画资料整合平台</h2>
+                <p class="mb-6 text-lg">为您的Maya动画学习和备课提供一站式资料管理</p>
+                <div class="max-w-md mx-auto">
+                    <div class="relative">
+                        <input type="text" id="search-input" placeholder="搜索资料..." 
+                               class="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300">
+                        <button id="search-btn" class="absolute right-2 top-2 bg-white text-primary px-4 py-1 rounded-lg hover:bg-blue-50 transition-colors">
+                            <i class="fa fa-search"></i> 搜索
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 数据统计 -->
+        <section class="mb-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-lg shadow p-6 text-center">
+                    <div class="text-primary text-3xl mb-2"><i class="fa fa-book"></i></div>
+                    <h3 class="text-lg font-semibold mb-1">总资料数</h3>
+                    <p id="total-resources" class="text-2xl font-bold">0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6 text-center">
+                    <div class="text-secondary text-3xl mb-2"><i class="fa fa-folder"></i></div>
+                    <h3 class="text-lg font-semibold mb-1">分类数</h3>
+                    <p id="total-categories" class="text-2xl font-bold">0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6 text-center">
+                    <div class="text-accent text-3xl mb-2"><i class="fa fa-star"></i></div>
+                    <h3 class="text-lg font-semibold mb-1">收藏资料</h3>
+                    <p id="total-favorites" class="text-2xl font-bold">0</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 资料库 -->
+        <section id="resources" class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-dark">资料库</h2>
+                <div class="flex space-x-4">
+                    <select id="filter-category" class="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="all">全部分类</option>
+                    </select>
+                    <select id="sort-by" class="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="date-desc">最新添加</option>
+                        <option value="date-asc">最早添加</option>
+                        <option value="name-asc">名称正序</option>
+                        <option value="name-desc">名称倒序</option>
+                    </select>
+                </div>
+            </div>
+            <div id="resources-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 资料卡片将通过JavaScript动态生成 -->
+            </div>
+        </section>
+
+        <!-- 分类 -->
+        <section id="categories" class="mb-12">
+            <h2 class="text-2xl font-bold text-dark mb-6">分类浏览</h2>
+            <div id="categories-container" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- 分类卡片将通过JavaScript动态生成 -->
+            </div>
+        </section>
+
+        <!-- 添加资料 -->
+        <section id="add" class="mb-12">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-2xl font-bold text-dark mb-6">添加新资料</h2>
+                <form id="add-resource-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="resource-title" class="block text-gray-700 mb-2">标题</label>
+                            <input type="text" id="resource-title" required 
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label for="resource-category" class="block text-gray-700 mb-2">分类</label>
+                            <select id="resource-category" required 
+                                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="">选择分类</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="resource-type" class="block text-gray-700 mb-2">类型</label>
+                            <select id="resource-type" required 
+                                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="">选择类型</option>
+                                <option value="video">视频教程</option>
+                                <option value="document">文档资料</option>
+                                <option value="project">项目文件</option>
+                                <option value="other">其他资料</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="resource-level" class="block text-gray-700 mb-2">难度等级</label>
+                            <select id="resource-level" required 
+                                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="">选择难度</option>
+                                <option value="beginner">初级</option>
+                                <option value="intermediate">中级</option>
+                                <option value="advanced">高级</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="resource-description" class="block text-gray-700 mb-2">描述</label>
+                            <textarea id="resource-description" rows="3" 
+                                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="resource-link" class="block text-gray-700 mb-2">链接/路径</label>
+                            <input type="text" id="resource-link" required 
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="resource-tags" class="block text-gray-700 mb-2">标签（用逗号分隔）</label>
+                            <input type="text" id="resource-tags" 
+                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                    </div>
+                    <div class="mt-6 flex space-x-4">
+                        <button type="submit" class="btn-primary">
+                            <i class="fa fa-plus"></i> 添加资料
+                        </button>
+                        <button type="button" id="add-category-btn" class="btn-outline">
+                            <i class="fa fa-folder-plus"></i> 添加分类
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <p>Maya动画资料整合平台 &copy; 2026</p>
+                <p class="text-gray-400 text-sm mt-2">仅供个人学习和备课使用</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 添加分类模态框 -->
+    <div id="add-category-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+            <h3 class="text-xl font-bold text-dark mb-4">添加新分类</h3>
+            <form id="add-category-form">
+                <div class="mb-4">
+                    <label for="category-name" class="block text-gray-700 mb-2">分类名称</label>
+                    <input type="text" id="category-name" required 
+                           class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div class="mb-4">
+                    <label for="category-color" class="block text-gray-700 mb-2">分类颜色</label>
+                    <input type="color" id="category-color" value="#3B82F6" 
+                           class="w-full h-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancel-category" class="btn-outline">取消</button>
+                    <button type="submit" class="btn-primary">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 资料详情模态框 -->
+    <div id="resource-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-4">
+                <h3 id="modal-title" class="text-xl font-bold text-dark"></h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="modal-content" class="space-y-4">
+                <!-- 资料详情将通过JavaScript动态生成 -->
+            </div>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button id="edit-resource" class="btn-outline">
+                    <i class="fa fa-edit"></i> 编辑
+                </button>
+                <button id="delete-resource" class="btn-outline text-red-500">
+                    <i class="fa fa-trash"></i> 删除
+                </button>
+                <button id="close-modal-btn" class="btn-primary">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑资料模态框 -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold text-dark">编辑资料</h3>
+                <button id="close-edit-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="edit-resource-form">
+                <input type="hidden" id="edit-resource-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="edit-title" class="block text-gray-700 mb-2">标题</label>
+                        <input type="text" id="edit-title" required 
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label for="edit-category" class="block text-gray-700 mb-2">分类</label>
+                        <select id="edit-category" required 
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="">选择分类</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="edit-type" class="block text-gray-700 mb-2">类型</label>
+                        <select id="edit-type" required 
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">选择类型</option>
+                            <option value="video">视频教程</option>
+                            <option value="document">文档资料</option>
+                            <option value="project">项目文件</option>
+                            <option value="other">其他资料</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="edit-level" class="block text-gray-700 mb-2">难度等级</label>
+                        <select id="edit-level" required 
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">选择难度</option>
+                            <option value="beginner">初级</option>
+                            <option value="intermediate">中级</option>
+                            <option value="advanced">高级</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="edit-description" class="block text-gray-700 mb-2">描述</label>
+                        <textarea id="edit-description" rows="3" 
+                                  class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="edit-link" class="block text-gray-700 mb-2">链接/路径</label>
+                        <input type="text" id="edit-link" required 
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="edit-tags" class="block text-gray-700 mb-2">标签（用逗号分隔）</label>
+                        <input type="text" id="edit-tags" 
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" id="cancel-edit" class="btn-outline">取消</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fa fa-save"></i> 保存修改
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
